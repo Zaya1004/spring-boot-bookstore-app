@@ -42,7 +42,7 @@ public class CategoryService {
 	// deleteCategory: Long id avdg utga butsaahgui function, herev id olgohui bol orElseThrow
 	public void deleteCategory(Long id) {
 		Category foundCategory = categoryRepository.findById(id).orElseThrow();
-		categoryRepository.delete(foundCategory);
+		categoryRepository.delete(foundCategory);  
 	}
 	
 }
