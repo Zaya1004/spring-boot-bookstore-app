@@ -47,11 +47,14 @@ async function handleSubmit(event) {
 
     await fetch(API_URL, {
         method: "POST",
-        headers: {"Content-Type": "application/json"
-	},
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify(category),
-}
-);
+    }
+    );
+    form.addEventListener("submit",
+        handleSubmit
+    );
 
-
-loadCategories();
+    loadCategories();
