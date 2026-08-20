@@ -46,26 +46,26 @@ function renderAuthors(authors) {
         const idCell = document.createElement('td');
         idCell.textContent = author.id;
         const firstNameCell = document.createElement('td');
-        firstNameCell.textContent = author.id;
+        firstNameCell.textContent = author.firstName;
         const lastNameCell = document.createElement('td');
-        lastNameCell.textContent = author.id;
+        lastNameCell.textContent = author.lastName;
         const bioCell = document.createElement('td');
-        bioCell.textContent = author.id;
+        bioCell.textContent = author.bio ?? "";
 
         const actionCell = document.createElement('td');
-        const editButton = document.createElement('td');
+        const editButton = document.createElement('button');
         editButton.type = 'button';
         editButton.textContent = 'edit';
-        editButton.addEventListener('click', () => {
+         editButton.addEventListener('click', () => {
             startEdit(author);
-        })
+        });
 
-        const deleteButton = document.createElement('td');
-        editButton.type = 'button';
-        editButton.textContent = 'delete';
-        editButton.addEventListener('click', () => {
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.textContent = 'delete';
+        deleteButton.addEventListener('click', () => {
             deleteAuthor(author.id);
-        })
+        });
         actionCell.appendChild(editButton);
         actionCell.appendChild(deleteButton);
 

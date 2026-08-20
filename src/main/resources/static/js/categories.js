@@ -1,6 +1,7 @@
 "use strict";
 
 const API_URL = "/api/categories";
+
 const form = document.querySelector('category-form');
 const categoryIdInput = document.querySelector('category-id');
 const nameInput = document.querySelector('category-name');
@@ -9,23 +10,47 @@ const tableBody = document.querySelector('category-table-body');
 console.log('Category JavaScript loaded');
 
 async function loadCategories() {
-    const response = await fetch(API_URL);
-    const categoriesData = await response.json();
-    console.log(categoriesData);
+    try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+            throw new Error("could not be loaded.");
+        }
+        const data = await response.json();
+
+        renderCategories(data);
+
+    } catch (error) {
+        console.error(error);
+        showMessage("could not be loaded.");
+    }
 }
 
 function renderCategories(categories) {
     tableBody.innerHTML = "";
+    if(categories.length === 0){
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.textContent = "Categories not found";
+    
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+        return;
+    }
 
-    for (const category of categories) {
+    for (let category of categories) {
         const row = document.createElement("tr");
         const idCell = document.createElement("td");
         idCell.textContent = category.id;
         const nameCell = document.createElement("td");
         nameCell.textContent = category.name;
         const editBtn = document.createElement("edit-button");
+        editBtn.type = 'button';
         editBtn.textContent = "Edit";
+        editBtn.addEventListener('click', () => {
+            startEdit(category);
+        })
         const deleteBtn = document.createElement("delete-button");
+        
         deleteBtn.textContent = "Delete";
         row.appendChild(idCell);
     }
@@ -55,6 +80,6 @@ async function handleSubmit(event) {
     );
     form.addEventListener("submit",
         handleSubmit
-    );
+    )};
 
-    loadCategories();
+   loadCategories();
