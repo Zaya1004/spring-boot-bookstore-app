@@ -161,7 +161,7 @@ function resetForm() {
     saveButton.textContent = "Save button";
     cancelButton.hidden = true;
 }
-
+ 
 function startEdit(author) {
     authorIdInput.value = author.id;
     firstNameInput.value = author.firstName;

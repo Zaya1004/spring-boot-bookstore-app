@@ -6,6 +6,7 @@ const form = document.querySelector("#category-form");
 const categoryIdInput = document.querySelector("#category-id");
 const nameInput = document.querySelector("#category-name");
 const tableBody = document.querySelector("#category-table-body");
+const message = document.querySelector("#message");
 
 console.log('Category JavaScript loaded');
 
@@ -30,6 +31,7 @@ function renderCategories(categories) {
     if(categories.length === 0){
         const row = document.createElement('tr');
         const cell = document.createElement('td');
+        cell.colSpan = 3;
         cell.textContent = "Categories not found";
     
         row.appendChild(cell);
@@ -44,6 +46,8 @@ function renderCategories(categories) {
         const nameCell = document.createElement("td");
         nameCell.textContent = category.name;
         const actionCell = document.createElement('td');
+
+        // Use standard button elements
         const editBtn = document.createElement("edit-button");
         editBtn.type = 'button';
         editBtn.textContent = "Edit";
@@ -94,22 +98,61 @@ form.addEventListener(
     handleSubmit
 );
 
- function handleSubmit(event) {
+async function handleSubmit(event) {
     event.preventDefault();
-    const categoryName = nameInput.value;
+    const categoryName = nameInput.value.trim();
+    const id = categoryIdInput ? categoryIdInput.value.trim() : "";
+
     const category = {
-        name: categoryName.value
+        name: categoryName
     };
+
+    
     console.log('category', category)
     if(category.name === ""){
         showMessage("Name required");
         return;
+    }
+
+    const isEditing = id !== "";
+
+    const url = isEditing ? `${API_URL}/${id}` : API_URL;
+    
+    const method = isEditing ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(category)
+        });
+        if (!response.ok){
+            throw new Error("Request failed");
+        }
+        if(isEditing){
+            showMessage("Updated successfully.")
+        } else {
+            showMessage("Created successfully.")
+        }
+
+        resetForm();
+        await loadCategories();
+    } catch (error){
+        console.error(error);
+        showMessage("Request failed");
     }
 }
 
 function resetForm(){
     form.reset();
     nameInput.value = "";
+}
+
+function startEdit(category){
+    categoryIdInput.value = category.id;
+    nameInput.value = category.name;
 }
 
 function showMessage(text){
