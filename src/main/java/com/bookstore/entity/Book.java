@@ -35,14 +35,14 @@ public class Book {
 	private boolean active = true;
 	
 	@ManyToOne
-	@JoinColumn(name = "category", nullable = false)
+	@JoinColumn(name = "category_id", nullable = false)
 	private Category category;
 	
 	@ManyToOne
 	@JoinColumn(name = "author_id", nullable = false)
 	private Author author;
 	
-	public Book() {}
+	public Book() {} 
 
 	public Long getId() {
 		return id;
