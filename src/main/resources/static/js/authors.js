@@ -12,6 +12,8 @@ const saveButton = document.querySelector("#save-button");
 const cancelButton = document.querySelector("#cancel-button");
 
 const message = document.querySelector("#message");
+const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
 async function loadAuthors() {
     try {
@@ -86,7 +88,10 @@ async function deleteAuthor(id) {
     }
     try {
         const response = await fetch(`${API_URL}/${id}`, {
-            method: "DELETE"
+            method: "DELETE",
+			headers: {
+				[csrfHeader]: csrfToken
+			}
         });
         if (!response.ok) {
             throw new Error("Delete failed");
@@ -130,7 +135,8 @@ async function handleSubmit(e) {
         const response = await fetch(url, {
             method: method,
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+				[csrfHeader]: csrfToken
             },
             body: JSON.stringify(author)
         });

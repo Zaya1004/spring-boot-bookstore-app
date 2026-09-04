@@ -2,8 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
 <title>Insert title here</title>
-<link rel="stylesheet" type="text/css" href="../static/css/categories.css">
+<link rel="stylesheet" type="text/css" href="${/css/categories.css}">
 <script type="text/javascript" src="../static/js/categories.js" defer></script>
 </head>
 <body>

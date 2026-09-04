@@ -19,11 +19,18 @@ const saveButton = document.querySelector("#save-button");
 const cancelButton = document.querySelector("#cancel-button");
 const refreshButton = document.querySelector("#refresh-button");
 const message = document.querySelector("#message");
+const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+console.log(csrfHeader);
+console.log(csrfToken);
+console.log(activeInput);
+
 async function loadCategories() {
     console.log('api');
     const response = await fetch(CATEGORY_API);
 
-    if(!response.ok){
+    if (!response.ok) {
         throw new Error(
             "Categories could not be loaded"
         );
@@ -33,7 +40,7 @@ async function loadCategories() {
     categoryInput.innerHTML = `<optoin value = ""> 
     Select Category
     </option> `;
-    for (let category of categories){
+    for (let category of categories) {
         const option = document.createElement("option");
         option.value = category.id;
         option.textContent = category.name;
@@ -45,10 +52,10 @@ async function loadAuthors() {
     console.log('author api');
     const response = await fetch(AUTHOR_API);
 
-    if (!response.ok){
+    if (!response.ok) {
         throw new Error(
             "Authors could not be loaded"
-        ); 
+        );
     }
 
     const authors = await response.json();
@@ -56,7 +63,7 @@ async function loadAuthors() {
     Select Author
     </option>`;
 
-    for (let author of authors){
+    for (let author of authors) {
         const option = document.createElement("option");
         option.value = author.id;
         option.textContent = `${author.firstName} ${author.lastName}`;
@@ -64,12 +71,12 @@ async function loadAuthors() {
     }
 }
 
-async function loadBooks(){
+async function loadBooks() {
     console.log('books api');
     try {
         const response = await fetch(BOOK_API);
 
-        if (!response.ok){
+        if (!response.ok) {
             throw new Error(
                 "Books could not be loaded"
             );
@@ -79,14 +86,14 @@ async function loadBooks(){
 
         renderBooks(books);
 
-    } catch (error){
+    } catch (error) {
         console.error(error);
         showMessage("Books could not be loaded", true)
     }
-} 
-function renderBooks(books){
+}
+function renderBooks(books) {
     tableBody.innerHTML = "";
-    if (books.length === 0){
+    if (books.length === 0) {
         const row = document.createElement("tr");
         const cell = document.createElement("td");
         cell.colSpan = 9;
@@ -97,7 +104,7 @@ function renderBooks(books){
         return;
     }
 
-    for (let book of books ){
+    for (let book of books) {
         const row = document.createElement("tr");
         addCell(row, book.id);
         addCell(row, book.title);
@@ -126,7 +133,7 @@ function renderBooks(books){
     }
 }
 
-function addCell(row, value){
+function addCell(row, value) {
     const cell = document.createElement("td");
     cell.textContent = value;
     row.appendChild(cell);
@@ -140,38 +147,39 @@ async function handleSubmit(event) {
         isbn: isbnInput.value.trim(),
         price: Number(priceInput.value),
         stockQuantity: Number(stockInput.value),
-        active: activeInput.ariaChecked,
+        active: activeInput.checked,
         categoryId: Number(categoryInput.value),
         authorId: Number(authorInput.value)
     }
     const isEditing = id !== '';
-    const url = 
-    isEditing 
-    ? `${BOOK_API}/${id}`
-    : BOOK_API;
+    const url =
+        isEditing
+            ? `${BOOK_API}/${id}`
+            : BOOK_API;
 
-    const method = 
-    isEditing
-    ? "PUT"
-    : "POST";
+    const method =
+        isEditing
+            ? "PUT"
+            : "POST";
 
     try {
         const response = await fetch(url, {
             method: method,
             headers: {
-                "Content-Types": "application/json"
+                "Content-Type" : "application/json",
+                [csrfHeader]: csrfToken
             },
             body: JSON.stringify(book)
         });
-        if (!response.ok ){
+        if (!response.ok) {
             throw new Error(
                 "Book request failed"
             );
         }
         showMessage(
             isEditing
-            ? "Book updated successfully"
-            : "Book created successfully"
+                ? "Book updated successfully"
+                : "Book created successfully"
         );
 
         resetForm();
@@ -183,7 +191,7 @@ async function handleSubmit(event) {
 
 }
 
-function startEdit(book){
+function startEdit(book) {
     bookIdInput.value = book.id;
     titleInput.value = book.title;
     isbnInput.value = book.isbn;
@@ -201,43 +209,46 @@ function startEdit(book){
 }
 
 async function deleteBook(id) {
-    const confirmed = 
-    confirm (
-        "Are you sure you want to delete this book? "
-    );
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this book? "
+        );
 
-    if (!confirmed){
+    if (!confirmed) {
         return;
     }
     try {
-        const response = 
-        await fetch(
-            `${BOOK_API}/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
-        if (!response.ok){
+        const response =
+            await fetch(
+                `${BOOK_API}/${id}`,
+                {
+                    method: "DELETE",
+					headers: {
+						[csrfHeader]: csrfToken
+					}
+                }
+            );
+        if (!response.ok) {
             throw new Error(
                 "Delete failed"
             );
         }
         showMessage(
-        "Book deleted successfully"
-    );
-    resetForm();
-    await loadBooks();
-    } catch (error){
+            "Book deleted successfully"
+        );
+        resetForm();
+        await loadBooks();
+    } catch (error) {
         console.error(error);
         showMessage(
-            "Book could not be deleted", 
+            "Book could not be deleted",
             true
         );
     }
-    
+
 }
 
-function resetForm(){
+function resetForm() {
     form.reset();
     bookIdInput.value = "";
     activeInput.checked = true;
@@ -245,10 +256,10 @@ function resetForm(){
     cancelButton.hidden = false;
 }
 
-function showMessage(text, isError = false){
+function showMessage(text, isError = false) {
     message.textContent = text;
     message.hidden = false;
-    if (isError){
+    if (isError) {
         message.style.background = "#fee2e2";
         message.style.color = "#991b1b";
     } else {
