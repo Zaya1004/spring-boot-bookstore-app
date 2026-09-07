@@ -1,0 +1,90 @@
+package com.bookstore.service;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.bookstore.dto.AddCartItemRequest;
+import com.bookstore.dto.CartItemResponse;
+import com.bookstore.dto.CartResponse;
+import com.bookstore.entity.Book;
+import com.bookstore.entity.Cart;
+import com.bookstore.entity.CartItem;
+import com.bookstore.entity.User;
+import com.bookstore.repository.BookRepository;
+import com.bookstore.repository.CartItemRepository;
+import com.bookstore.repository.CartRepository;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class CartService {
+	private final CartRepository cartRepository;
+	private final CartItemRepository cartItemRepository;
+	private final BookRepository bookRepository;
+	private final CurrentUserService currentUserService;
+	public CartService(CartRepository cartRepository, CartItemRepository cartItemRepository,
+			BookRepository bookRepository, CurrentUserService currentUserService) {
+		super();
+		this.cartRepository = cartRepository;
+		this.cartItemRepository = cartItemRepository;
+		this.bookRepository = bookRepository;
+		this.currentUserService = currentUserService;
+	}
+	
+	@Transactional
+	public  Cart getOrCreateCurrentCart() {
+		User user = currentUserService.getCurrentUser();
+		return cartRepository.findByUser(user).orElseGet(() -> {
+			Cart cart = new Cart();
+			cart.setUser(user);
+			return cartRepository.save(cart);
+		});
+	}
+	
+	public CartResponse addItem(AddCartItemRequest request) {
+		Cart cart = getOrCreateCurrentCart();
+		Book book = bookRepository.findById(request.bookId()).orElseThrow();
+		if(!book.isActive()) {
+			System.err.println("Inactive book cannot be added to the cart");
+		}
+		if(book.getStockQuantity() < 0) {
+			System.err.println("Book is out of stock");
+		}
+		CartItem item = cartItemRepository.findByCartAndBook(cart, book).orElse(null);
+		int newQuantity;
+		if(item == null) {
+			item = new CartItem();
+			item.setCart(cart);;
+			item.setBook(book);
+			newQuantity = request.quantity();
+		} else {
+			newQuantity = item.getQuantity() + request.quantity();
+		}
+		if(newQuantity > book.getId()) {
+			System.err.println("Requested quantity exceeds stock");
+		}
+		item.setQuantity(newQuantity);
+		cartItemRepository.save(item);
+		return getCurrentCart();
+	}
+	
+	public CartResponse getCurrentCart() {
+		Cart cart = getOrCreateCurrentCart();
+		List<CartItem> items = cartItemRepository.findByCartOrderByIdAsc(cart);
+		List<CartItemResponse> itemResponses = items.stream().map(this::toResponse).toList();
+		BigDecimal total = itemResponses.stream().map(CartItemResponse::lineTotal).reduce(BigDecimal.ZERO,
+				BigDecimal::add);	
+		return new CartResponse(cart.getId(), itemResponses, total);
+	}
+	
+	private CartItemResponse toResponse (CartItem item) {
+		BigDecimal lineTotal = item.getBook().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+		return new CartItemResponse(item.getId(), item.getBook().getId(),
+				item.getBook().getTitle(),
+				item.getBook().getPrice(),
+				item.getQuantity(), lineTotal);
+	}
+	
+}
