@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.bookstore.dto.AddCartItemRequest;
 import com.bookstore.dto.CartItemResponse;
 import com.bookstore.dto.CartResponse;
+import com.bookstore.dto.UpdateCartItemRequest;
 import com.bookstore.entity.Book;
 import com.bookstore.entity.Cart;
 import com.bookstore.entity.CartItem;
@@ -62,7 +63,7 @@ public class CartService {
 		} else {
 			newQuantity = item.getQuantity() + request.quantity();
 		}
-		if(newQuantity > book.getId()) {
+		if(newQuantity > book.getStockQuantity()) {
 			System.err.println("Requested quantity exceeds stock");
 		}
 		item.setQuantity(newQuantity);
@@ -77,6 +78,32 @@ public class CartService {
 		BigDecimal total = itemResponses.stream().map(CartItemResponse::lineTotal).reduce(BigDecimal.ZERO,
 				BigDecimal::add);	
 		return new CartResponse(cart.getId(), itemResponses, total);
+	}
+	
+	@Transactional
+	public CartResponse updateQuantity(Long itemId, UpdateCartItemRequest request) {
+		Cart cart = getOrCreateCurrentCart();
+		CartItem item = cartItemRepository.findById(itemId).orElseThrow();
+		if (!item.getCart().getId().equals(cart.getId())) {
+			System.err.println("Cart item not found");
+		}
+		if(request.quantity() > item.getBook().getStockQuantity()) {
+			System.err.println("Requested quantity exceeds stock");
+		}
+		item.setQuantity(request.quantity());
+		cartItemRepository.save(item);
+		return getCurrentCart();
+	}
+	
+	@Transactional
+	public CartResponse removeItem(Long itemId) {
+		Cart cart = getOrCreateCurrentCart();
+		CartItem item = cartItemRepository.findById(itemId).orElseThrow();
+		if(!item.getCart().getId().equals(cart.getId())) {
+			System.err.println("Cart item not found");
+		}
+		cartItemRepository.delete(item);
+		return getCurrentCart();
 	}
 	
 	private CartItemResponse toResponse (CartItem item) {
