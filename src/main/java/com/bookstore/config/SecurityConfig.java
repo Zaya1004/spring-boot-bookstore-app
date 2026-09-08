@@ -1,10 +1,8 @@
 package com.bookstore.config;
 
-import java.text.Normalizer.Form;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,7 +29,7 @@ public class SecurityConfig {
 
 						.requestMatchers("/api/users/**", "/api/books/**", "/api/authors/**", "/api/categories/**").hasRole("ADMIN")
 
-						.requestMatchers("/customer/**").hasRole("CUSTOMER")
+						.requestMatchers("/customer/**", "/api/cart/**").hasRole("CUSTOMER")
 
 						.anyRequest().authenticated()
 
